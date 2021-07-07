@@ -1,6 +1,10 @@
+import java.awt.BorderLayout;
+import java.awt.Button;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.awt.image.ImageObserver;
 import java.awt.print.*;
@@ -9,23 +13,80 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import javax.imageio.ImageIO;
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
 
 
 public class GenerateMaze extends JPanel{	
-	static double start_maze_parameter = 0.03;
+	static double start_maze_parameter = 0.05;
 	static double wall_size_parameter = 0.0155;
+	static int complexity = 0;
+	
+	public JRadioButton[] createRadioButtons(String[] text){
+		JRadioButton[] radio_arr = new JRadioButton[3];
+		for(int i = 0; i < text.length; i++){
+			radio_arr[i] = new JRadioButton(text[i]);
+			final int c = i+1;
+			radio_arr[i].addActionListener(new ActionListener(){
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					complexity = c;
+				}
+			});
+		}
+		return radio_arr;
+	}
+	
+	public JFrame initializeUserSelect(){
+		JFrame user_select = new JFrame();
+		user_select.setSize(700, 60);
+		
+		JTextArea text = new JTextArea("Select the complexity of maze");
+		String[] radio_text = {"Small", "Medium", "Large"};
+		JRadioButton[] radio_buttons = createRadioButtons(radio_text);
+		Button create = new Button("Create");
+		create.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				for(int i = 0; i < radio_buttons.length; i++) radio_buttons[i].setSelected(false);
+				user_select.setVisible(false);
+				repaint();
+			}
+		});
+		
+		JPanel components = new JPanel();
+		components.add(text);
+		for(int i = 0; i < radio_buttons.length; i++) components.add(radio_buttons[i]);
+		components.add(create);
+		
+		user_select.add(components);
+		return user_select;
+	}
 	
 	public GenerateMaze(int width, int height){
-		repaint();
+		//repaint();
+		Button create_maze = new Button("Create");
+		JFrame user_select = initializeUserSelect();
+		
+		create_maze.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				user_select.setVisible(true);
+			}
+		});
+		add(create_maze);
 	}
 	
 	public void drawMazeToGraphics(char[][] grid, Graphics givenGraphics, int width, int height){
+		// Make a height_parameter = 1/11, then set wall_size to (1-height_parameter)*height/grid.length - 10
 		int wall_size = (int) (wall_size_parameter*height);
-		int x_start_pos = (int) (start_maze_parameter * height);
-		int y_start_pos = (int) (start_maze_parameter * width);
-				
+		int x_start_pos = height/11;
+		int y_start_pos = width/2 - wall_size*grid[0].length/2;
+		
 		for(int i = 0, x = x_start_pos; i < grid.length; i++, x+=wall_size){
 			for(int j = 0, y = y_start_pos; j < grid[0].length; j++,y+=wall_size){
 				if(grid[i][j] == '#'){
@@ -40,11 +101,28 @@ public class GenerateMaze extends JPanel{
 		
 		g.setColor(Color.BLACK);
 		
-		Maze maze = new Maze(30, 40);
-		maze.generateMaze();
-		maze.grid.print();
-		drawMazeToGraphics(maze.grid.grid, g, getWidth(), getHeight());
-		downloadImage(maze.grid.grid, getWidth(), getHeight());
+		if(complexity == 1){
+			Maze maze = new Maze(10, 20);
+			maze.generateMaze();
+			maze.grid.print();
+
+			drawMazeToGraphics(maze.grid.grid, g, getWidth(), getHeight());
+		}else if(complexity == 2){
+			Maze maze = new Maze(20, 30);
+			maze.generateMaze();
+			maze.grid.print();
+
+			drawMazeToGraphics(maze.grid.grid, g, getWidth(), getHeight());
+		}else if(complexity == 3){
+
+			Maze maze = new Maze(30, 40);
+			maze.generateMaze();
+			maze.grid.print();
+
+			drawMazeToGraphics(maze.grid.grid, g, getWidth(), getHeight());
+		}
+		
+		//downloadImage(maze.grid.grid, getWidth(), getHeight());
 	}
 	
 	public void downloadImage(char[][] mazeGrid, int width, int height){
