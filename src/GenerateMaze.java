@@ -1,6 +1,7 @@
 import java.awt.BorderLayout;
 import java.awt.Button;
 import java.awt.Color;
+import java.awt.Desktop;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
@@ -14,17 +15,21 @@ import java.util.ArrayList;
 
 import javax.imageio.ImageIO;
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 
 public class GenerateMaze extends JPanel{	
 	static double start_maze_parameter = 0.05;
 	static double wall_size_parameter = 0.0155;
 	static int complexity = 0;
+	static Maze current_maze;
 	
 	public JRadioButton[] createRadioButtons(String[] text){
 		JRadioButton[] radio_arr = new JRadioButton[3];
@@ -70,6 +75,8 @@ public class GenerateMaze extends JPanel{
 	public GenerateMaze(int width, int height){
 		//repaint();
 		Button create_maze = new Button("Create");
+		Button save_maze = new Button("Save Maze");
+		
 		JFrame user_select = initializeUserSelect();
 		
 		create_maze.addActionListener(new ActionListener(){
@@ -78,7 +85,41 @@ public class GenerateMaze extends JPanel{
 				user_select.setVisible(true);
 			}
 		});
+		save_maze.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				
+				if(current_maze == null){
+					JOptionPane.showMessageDialog(null, "Must create a maze first!");
+					return;
+				}
+				
+				JFileChooser file_save = new JFileChooser();
+				file_save.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+				int return_value = file_save.showSaveDialog(null);
+				
+				if(return_value == JFileChooser.APPROVE_OPTION){
+					File given_file = file_save.getSelectedFile();
+					String file_name = given_file.getName();
+					String extension = file_name.substring(file_name.length()-4);
+					if(!extension.equals(".png") && !extension.equals(".jpg")){
+						extension = "png";
+					}else{
+						extension = extension.substring(1);
+					}
+					
+					System.out.println("filename, extension, path: " + file_name + ", " + extension + ", " + given_file.getAbsolutePath());
+					
+					boolean error = downloadImageGivenFile(current_maze.grid.grid, width, height, given_file, extension);
+					if(error){
+						JOptionPane.showMessageDialog(null, "An error occured. Make sure to give a file name that is not a directory");
+					}
+				}
+			}
+		});
+		
 		add(create_maze);
+		add(save_maze);
 	}
 	
 	public void drawMazeToGraphics(char[][] grid, Graphics givenGraphics, int width, int height){
@@ -102,40 +143,41 @@ public class GenerateMaze extends JPanel{
 		g.setColor(Color.BLACK);
 		
 		if(complexity == 1){
-			Maze maze = new Maze(10, 20);
-			maze.generateMaze();
-			maze.grid.print();
+			current_maze = new Maze(10, 20);
+			current_maze.generateMaze();
+			current_maze.grid.print();
 
-			drawMazeToGraphics(maze.grid.grid, g, getWidth(), getHeight());
+			drawMazeToGraphics(current_maze.grid.grid, g, getWidth(), getHeight());
 		}else if(complexity == 2){
-			Maze maze = new Maze(20, 30);
-			maze.generateMaze();
-			maze.grid.print();
+			current_maze = new Maze(20, 30);
+			current_maze.generateMaze();
+			current_maze.grid.print();
 
-			drawMazeToGraphics(maze.grid.grid, g, getWidth(), getHeight());
+			drawMazeToGraphics(current_maze.grid.grid, g, getWidth(), getHeight());
 		}else if(complexity == 3){
+			current_maze = new Maze(30, 40);
+			current_maze.generateMaze();
+			current_maze.grid.print();
 
-			Maze maze = new Maze(30, 40);
-			maze.generateMaze();
-			maze.grid.print();
-
-			drawMazeToGraphics(maze.grid.grid, g, getWidth(), getHeight());
+			drawMazeToGraphics(current_maze.grid.grid, g, getWidth(), getHeight());
 		}
-		
-		//downloadImage(maze.grid.grid, getWidth(), getHeight());
 	}
 	
-	public void downloadImage(char[][] mazeGrid, int width, int height){
+	public boolean downloadImageGivenFile(char[][] mazeGrid, int width, int height, File save_to, String file_type){
 		BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 		Graphics mazeGraphics = (Graphics) image.createGraphics();
+		mazeGraphics.setColor(Color.WHITE);
+		mazeGraphics.fillRect(0, 0, width, height);
+		mazeGraphics.setColor(Color.BLACK);
 		
 		drawMazeToGraphics(mazeGrid, mazeGraphics, width, height);
 		
 		try {
-			ImageIO.write(image, "png", new File("/Users/RichSharma/Desktop/Maze.png"));
-		} catch (IOException e) {
+			ImageIO.write(image, file_type, save_to);
+			return false;
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			return true;
 		}
 	}
 	
