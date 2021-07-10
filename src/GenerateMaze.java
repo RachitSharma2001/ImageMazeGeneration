@@ -36,8 +36,9 @@ public class GenerateMaze extends JPanel{
 		width = w;
 		height = h;
 		
-		Button create_maze = new Button("Create");
+		Button create_maze = new Button("Create New");
 		Button save_maze = new Button("Save Maze");
+		Button print_maze = new Button("Print Maze");
 		
 		JFrame user_select = initializeUserSelect();
 		
@@ -68,8 +69,16 @@ public class GenerateMaze extends JPanel{
 			}
 		});
 		
+		print_maze.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				printEverything();
+			}
+		});
+		
 		add(create_maze);
 		add(save_maze);
+		add(print_maze);
 	}
 	
 	public JRadioButton[] createRadioButtons(String[] text){
@@ -80,6 +89,8 @@ public class GenerateMaze extends JPanel{
 			radio_arr[i].addActionListener(new ActionListener(){
 				@Override
 				public void actionPerformed(ActionEvent e) {
+					for(int j = 0; j < 3; j++) radio_arr[j].setSelected(false);
+					radio_arr[c-1].setSelected(true);
 					complexity = c;
 				}
 			});
@@ -92,6 +103,7 @@ public class GenerateMaze extends JPanel{
 		user_select.setSize(700, 60);
 		
 		JTextArea text = new JTextArea("Select the complexity of maze");
+		text.setEditable(false);
 		String[] radio_text = {"Small", "Medium", "Large"};
 		JRadioButton[] radio_buttons = createRadioButtons(radio_text);
 		Button create = new Button("Create");
@@ -178,12 +190,16 @@ public class GenerateMaze extends JPanel{
 		}
 	}
 	
+	public BufferedImage createBufferedImage(){
+		return new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+	}
+	
 	public String downloadImage(char[][] mazeGrid, File given_file){
 		String file_name = given_file.getName();
 		String extension = getExtension(file_name);
 		if(extension == null) return "Please make sure your file names have .png or .jpg extensions";
 		
-		BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+		BufferedImage image = createBufferedImage();
 		drawMazeToGraphics(mazeGrid, giveGraphics(image));
 		
 		try {
@@ -195,14 +211,20 @@ public class GenerateMaze extends JPanel{
 		}
 	}
 	
-	public void printEverything(Graphics g){
+	public void printEverything(){
+		if(current_maze.grid.grid == null) return;
+		Graphics maze = giveGraphics(new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB));
+		drawMazeToGraphics(current_maze.grid.grid, maze);
+		
 		PrinterJob print_job = PrinterJob.getPrinterJob();
-		print_job.setPrintable(new Printer(g));
+		print_job.setPrintable(new Printer(maze));
 		try {
 			print_job.print();
 		} catch (PrinterException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			showPopupMessage("An error occured. Make sure a printer is set up on your computer!");
+			System.out.println("PrinterException");
+		} catch (Exception e){
+			showPopupMessage("Some error occured");
 		}
 	}
 }
@@ -219,7 +241,10 @@ class Printer implements Printable{
 			throws PrinterException {
 		
 		if(pageIndex > 0){
+			JOptionPane.showMessageDialog(null, "No such Page");
 			return NO_SUCH_PAGE;
+	    }else{
+	    	JOptionPane.showMessageDialog(null, "Page exists");
 	    }
 		
 		Graphics2D twod_graphics = (Graphics2D) graphics;
