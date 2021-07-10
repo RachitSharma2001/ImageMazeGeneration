@@ -30,6 +30,47 @@ public class GenerateMaze extends JPanel{
 	static double wall_size_parameter = 0.0155;
 	static int complexity = 0;
 	static Maze current_maze;
+	int width, height;
+	
+	public GenerateMaze(int w, int h){
+		width = w;
+		height = h;
+		
+		Button create_maze = new Button("Create");
+		Button save_maze = new Button("Save Maze");
+		
+		JFrame user_select = initializeUserSelect();
+		
+		create_maze.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				user_select.setVisible(true);
+			}
+		});
+		
+		save_maze.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				
+				if(current_maze == null){
+					showPopupMessage("Must create a maze first!");
+					return;
+				}
+				
+				JFileChooser file_save = new JFileChooser();
+				file_save.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+				int return_value = file_save.showSaveDialog(null);
+				
+				if(return_value == JFileChooser.APPROVE_OPTION){
+					String result = downloadImage(current_maze.grid.grid, file_save.getSelectedFile());
+					showPopupMessage(result);
+				}
+			}
+		});
+		
+		add(create_maze);
+		add(save_maze);
+	}
 	
 	public JRadioButton[] createRadioButtons(String[] text){
 		JRadioButton[] radio_arr = new JRadioButton[3];
@@ -72,58 +113,13 @@ public class GenerateMaze extends JPanel{
 		return user_select;
 	}
 	
-	public GenerateMaze(int width, int height){
-		//repaint();
-		Button create_maze = new Button("Create");
-		Button save_maze = new Button("Save Maze");
-		
-		JFrame user_select = initializeUserSelect();
-		
-		create_maze.addActionListener(new ActionListener(){
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				user_select.setVisible(true);
-			}
-		});
-		save_maze.addActionListener(new ActionListener(){
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				
-				if(current_maze == null){
-					JOptionPane.showMessageDialog(null, "Must create a maze first!");
-					return;
-				}
-				
-				JFileChooser file_save = new JFileChooser();
-				file_save.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-				int return_value = file_save.showSaveDialog(null);
-				
-				if(return_value == JFileChooser.APPROVE_OPTION){
-					File given_file = file_save.getSelectedFile();
-					String file_name = given_file.getName();
-					String extension = file_name.substring(file_name.length()-4);
-					if(!extension.equals(".png") && !extension.equals(".jpg")){
-						extension = "png";
-					}else{
-						extension = extension.substring(1);
-					}
-					
-					System.out.println("filename, extension, path: " + file_name + ", " + extension + ", " + given_file.getAbsolutePath());
-					
-					boolean error = downloadImageGivenFile(current_maze.grid.grid, width, height, given_file, extension);
-					if(error){
-						JOptionPane.showMessageDialog(null, "An error occured. Make sure to give a file name that is not a directory");
-					}
-				}
-			}
-		});
-		
-		add(create_maze);
-		add(save_maze);
+	public void showPopupMessage(String text){
+		JOptionPane.showMessageDialog(null, text);
 	}
 	
-	public void drawMazeToGraphics(char[][] grid, Graphics givenGraphics, int width, int height){
-		// Make a height_parameter = 1/11, then set wall_size to (1-height_parameter)*height/grid.length - 10
+	public void drawMazeToGraphics(char[][] grid, Graphics givenGraphics){
+		if(grid == null) return;
+		
 		int wall_size = (int) (wall_size_parameter*height);
 		int x_start_pos = height/11;
 		int y_start_pos = width/2 - wall_size*grid[0].length/2;
@@ -142,42 +138,60 @@ public class GenerateMaze extends JPanel{
 		
 		g.setColor(Color.BLACK);
 		
+		int maze_height = 0, maze_width = 0;
 		if(complexity == 1){
-			current_maze = new Maze(10, 20);
-			current_maze.generateMaze();
-			current_maze.grid.print();
-
-			drawMazeToGraphics(current_maze.grid.grid, g, getWidth(), getHeight());
+			maze_height = 10;
+			maze_width = 20;
 		}else if(complexity == 2){
-			current_maze = new Maze(20, 30);
-			current_maze.generateMaze();
-			current_maze.grid.print();
-
-			drawMazeToGraphics(current_maze.grid.grid, g, getWidth(), getHeight());
+			maze_height = 20;
+			maze_width = 30;
 		}else if(complexity == 3){
-			current_maze = new Maze(30, 40);
+			maze_height = 30;
+			maze_width = 40;
+		}
+		
+		if(maze_height != 0){
+			current_maze = new Maze(maze_height, maze_width);
 			current_maze.generateMaze();
-			current_maze.grid.print();
-
-			drawMazeToGraphics(current_maze.grid.grid, g, getWidth(), getHeight());
+			drawMazeToGraphics(current_maze.grid.grid, g);
 		}
 	}
 	
-	public boolean downloadImageGivenFile(char[][] mazeGrid, int width, int height, File save_to, String file_type){
-		BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+	public Graphics giveGraphics(BufferedImage image){
 		Graphics mazeGraphics = (Graphics) image.createGraphics();
 		mazeGraphics.setColor(Color.WHITE);
 		mazeGraphics.fillRect(0, 0, width, height);
 		mazeGraphics.setColor(Color.BLACK);
+		return mazeGraphics;
+	}
+	
+	public boolean isValidExtension(String extension){
+		return extension.equals("png") || extension.equals("jpg");
+	}
+	
+	public String getExtension(String file_name){
+		if(file_name.indexOf('.') != -1){
+			String extension = file_name.substring(file_name.length()-3);
+			return (isValidExtension(extension) ? extension : null);
+		}else{
+			return "png";
+		}
+	}
+	
+	public String downloadImage(char[][] mazeGrid, File given_file){
+		String file_name = given_file.getName();
+		String extension = getExtension(file_name);
+		if(extension == null) return "Please make sure your file names have .png or .jpg extensions";
 		
-		drawMazeToGraphics(mazeGrid, mazeGraphics, width, height);
+		BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+		drawMazeToGraphics(mazeGrid, giveGraphics(image));
 		
 		try {
-			ImageIO.write(image, file_type, save_to);
-			return false;
+			ImageIO.write(image, extension, given_file);
+			return "Successfully saved image to " + file_name;
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			return true;
+			return "An error occurred. Make sure your file name is different from any directories on your device";
 		}
 	}
 	
@@ -214,182 +228,4 @@ class Printer implements Printable{
 		return PAGE_EXISTS;
 	}
 	
-}
-
-class Maze{
-	private Walls walls;
-	public Grid grid;
-	private DisjointSet ds;
-	
-	Maze(int R, int C){
-		walls = new Walls(R, C);
-		grid = new Grid(R, C);
-		ds = new DisjointSet(R, C);
-	}
-	
-	void generateMaze(){
-		while(!walls.noneLeft()){
-			WallObj curr_wall = walls.giveRandomWall();
-			int first_id = curr_wall.getFirstId();
-			int second_id = curr_wall.getSecondId();
-			if(!ds.sameSet(first_id, second_id)){
-				ds.union(first_id, second_id);
-				grid.knockDownWall(first_id, second_id);
-			}
-		}
-	}
-}
-
-// Eventually I want to remove the array list and have just the priority queues
-class Walls{
-	private ArrayList<WallObj> walls_list;
-	
-	Walls(int R, int C){
-		int id_count = 0;
-		walls_list = new ArrayList<WallObj>();
-		for(int row = 0; row < R; row++){
-			for(int col = 0; col < C; col++){
-				if(col != 0) walls_list.add(new WallObj(id_count-1, id_count));
-				if(row != 0) walls_list.add(new WallObj(id_count-C, id_count));
-				id_count++;
-			}
-		}
-	}
-	
-	WallObj giveRandomWall(){
-		int rand_ind = Random.giveRandInt(0, walls_list.size() - 1);
-		WallObj deleted_wall = walls_list.get(rand_ind);
-		walls_list.remove(rand_ind);
-		return deleted_wall;
-	}
-	
-	boolean noneLeft(){
-		return walls_list.size() == 0;
-	}
-}
-
-class WallObj{
-	int first_id, second_id;
-	
-	WallObj(int f_id, int s_id){
-		first_id = f_id;
-		second_id = s_id;
-	}
-	
-	int getFirstId(){
-		return first_id;
-	}
-	
-	int getSecondId(){
-		return second_id;
-	}
-}
-
-class Grid{
-	char[][] grid;
-	char SPACE = ' ', WALL = '#';
-	int R, C;
-	Grid(int given_R, int given_C){
-		R = given_R;
-		C = given_C;
-		
-		initializeGridArray(2*R+1, 2*C+1);
-	}
-	
-	void initializeGridArray(int R, int C){
-		grid = new char[R][C];
-		for(int i = 0; i < R; i++){
-			for(int j = 0; j < C; j++){
-				if(isEven(i*j)){
-					grid[i][j] = WALL;
-				}else{
-					grid[i][j] = SPACE;
-				}
-			}
-		}
-		grid[0][1] = SPACE;
-		grid[R-1][C-2] = SPACE;
-	}
-	
-	void knockDownWall(int first_id, int second_id){
-		int x = getRow(first_id);
-		int y = getCol(first_id);
-		if(isRight(first_id, second_id)){
-			grid[x][y+1] = SPACE;
-		}else{
-			grid[x+1][y] = SPACE;
-		}
-	}
-	
-	int getRow(int id){
-		return 1 + 2*(id/C);
-	}
-	
-	int getCol(int id){
-		return 1 + 2*(id%C);
-	}
-	
-	boolean isRight(int first_id, int second_id){
-		return first_id + 1 == second_id;
-	}
-	
-	boolean isEven(int num){ 
-		return num % 2 == 0;
-	}
-	
-	void print(){
-		for(int i = 0; i < grid.length; i++){
-			for(int j = 0; j < grid[0].length; j++){
-				System.out.print(grid[i][j]);
-			}
-			System.out.println();
-		}
-	}
-}
-
-class DisjointSet{
-	int[] disjoint_set;
-	
-	DisjointSet(int R, int C){
-		disjoint_set = new int[R*C];
-		for(int i = 0; i < disjoint_set.length; i++){
-			disjoint_set[i] = -1;
-		}
-	}
-	
-	void union(int first, int second){
-		int head_first = find(first);
-		int head_second = find(second);
-		int new_size = disjoint_set[head_first] + disjoint_set[head_second];
-		
-		if(isSmaller(head_first, head_second)){
-			disjoint_set[head_first] = head_second;
-			disjoint_set[head_second] = new_size;
-		}else{
-			disjoint_set[head_second] = head_first;
-			disjoint_set[head_first] = new_size;
-		}
-	}
-	
-	int find(int id){
-		while(disjoint_set[id] >= 0){
-			id = disjoint_set[id];
-		}
-		
-		return id;
-	}
-	
-	boolean sameSet(int first_id, int second_id){
-		return find(first_id) == find(second_id);
-	}
-	
-	boolean isSmaller(int left_head, int right_head){
-		return disjoint_set[left_head] > disjoint_set[right_head];
-	}
-}
-
-class Random{
-	static int giveRandInt(int low, int high){
-		return low + (int) (Math.random() * (high - low));
-	}
 }
