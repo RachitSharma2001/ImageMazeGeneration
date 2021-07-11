@@ -4,8 +4,11 @@ import java.awt.Color;
 import java.awt.Desktop;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Scrollbar;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.AdjustmentEvent;
+import java.awt.event.AdjustmentListener;
 import java.awt.image.BufferedImage;
 import java.awt.image.ImageObserver;
 import java.awt.print.*;
@@ -20,8 +23,11 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
+import javax.swing.JSlider;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 
@@ -31,6 +37,14 @@ public class GenerateMaze extends JPanel{
 	static int complexity = 0;
 	static Maze current_maze;
 	int width, height;
+	Scrollbar mheight_slider, mwidth_slider;
+	
+	public void remakeMaze(){
+		int maze_h = mheight_slider.getValue();
+		int maze_w = mwidth_slider.getValue();
+		current_maze = new Maze(maze_h, maze_w);
+		repaint();
+	}
 	
 	public GenerateMaze(int w, int h){
 		width = w;
@@ -39,6 +53,26 @@ public class GenerateMaze extends JPanel{
 		Button create_maze = new Button("Create New");
 		Button save_maze = new Button("Save Maze");
 		Button print_maze = new Button("Print Maze");
+		mheight_slider = new Scrollbar(Scrollbar.HORIZONTAL);
+		mwidth_slider = new Scrollbar(Scrollbar.HORIZONTAL);
+
+		mheight_slider.addAdjustmentListener(new AdjustmentListener(){
+
+			@Override
+			public void adjustmentValueChanged(AdjustmentEvent e) {
+				remakeMaze();
+			}
+			
+		});
+		
+		mwidth_slider.addAdjustmentListener(new AdjustmentListener(){
+
+			@Override
+			public void adjustmentValueChanged(AdjustmentEvent e) {
+				remakeMaze();
+			}
+			
+		});
 		
 		JFrame user_select = initializeUserSelect();
 		
@@ -79,6 +113,8 @@ public class GenerateMaze extends JPanel{
 		add(create_maze);
 		add(save_maze);
 		add(print_maze);
+		add(mheight_slider);
+		add(mwidth_slider);
 	}
 	
 	public JRadioButton[] createRadioButtons(String[] text){
@@ -92,6 +128,9 @@ public class GenerateMaze extends JPanel{
 					for(int j = 0; j < 3; j++) radio_arr[j].setSelected(false);
 					radio_arr[c-1].setSelected(true);
 					complexity = c;
+					current_maze = new Maze(10*c, 10*c + 10);
+					mheight_slider.setValue(10*c);
+					mwidth_slider.setValue(10*c+10);
 				}
 			});
 		}
@@ -145,7 +184,7 @@ public class GenerateMaze extends JPanel{
 		}
 	}
 	
-	public void paint(Graphics g){
+	/*public void paint(Graphics g){
 		super.paintComponent(g);
 		
 		g.setColor(Color.BLACK);
@@ -164,6 +203,19 @@ public class GenerateMaze extends JPanel{
 		
 		if(maze_height != 0){
 			current_maze = new Maze(maze_height, maze_width);
+			current_maze.generateMaze();
+			drawMazeToGraphics(current_maze.grid.grid, g);
+		}
+	}*/
+	
+	public void paint(Graphics g){
+		super.paintComponent(g);
+		
+		g.setColor(Color.BLACK);
+		
+		
+		if(current_maze != null){
+			//current_maze = new Maze(maze_height, maze_width);
 			current_maze.generateMaze();
 			drawMazeToGraphics(current_maze.grid.grid, g);
 		}
@@ -222,9 +274,8 @@ public class GenerateMaze extends JPanel{
 			print_job.print();
 		} catch (PrinterException e) {
 			showPopupMessage("An error occured. Make sure a printer is set up on your computer!");
-			System.out.println("PrinterException");
 		} catch (Exception e){
-			showPopupMessage("Some error occured");
+			showPopupMessage("An error occured");
 		}
 	}
 }
@@ -241,10 +292,7 @@ class Printer implements Printable{
 			throws PrinterException {
 		
 		if(pageIndex > 0){
-			JOptionPane.showMessageDialog(null, "No such Page");
 			return NO_SUCH_PAGE;
-	    }else{
-	    	JOptionPane.showMessageDialog(null, "Page exists");
 	    }
 		
 		Graphics2D twod_graphics = (Graphics2D) graphics;

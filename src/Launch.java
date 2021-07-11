@@ -15,7 +15,6 @@ public class Launch {
 	public static void main(String[] args){
 		GenerateMaze maze_generation_class = new GenerateMaze(width, height);
 		
-		
 		JFrame frame = new JFrame();
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.add(maze_generation_class);
