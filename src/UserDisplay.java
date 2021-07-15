@@ -7,11 +7,14 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 
+import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 
 public class UserDisplay extends JPanel{
 	private Button create_maze;
+	private Button save_maze;
 	private UserSelect user_select;
 	private Maze current_maze;
 	
@@ -36,7 +39,7 @@ public class UserDisplay extends JPanel{
 		
 	}
 	
-	private void createComponents(){
+	private void createMazeComponent(){
 		create_maze = new Button("Create New");
 		
 		user_select = new UserSelect(700, 60);
@@ -58,6 +61,25 @@ public class UserDisplay extends JPanel{
 		});
 		
 		add(create_maze);
+	}
+	
+	private void saveMazeComponent(){
+		save_maze = new Button("Download");
+		
+		FileChooser new_chooser = new FileChooser();
+		save_maze.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				new_chooser.showUp(current_maze);
+			}
+		});
+		
+		add(save_maze);
+	}
+	
+	private void createComponents(){
+		createMazeComponent();
+		saveMazeComponent();
 	}
 	
 	public UserDisplay() {
