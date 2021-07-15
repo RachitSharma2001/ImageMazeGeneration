@@ -93,7 +93,7 @@ public class UserDisplay extends JPanel{
 	private void printMazeComponent(){
 		print_maze = new Button("Print");
 		
-		Printer2 printer = new Printer2();
+		Printer printer = new Printer();
 		print_maze.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {

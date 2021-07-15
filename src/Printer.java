@@ -9,7 +9,7 @@ import java.awt.print.PrinterJob;
 
 import javax.swing.JOptionPane;
 
-public class Printer2 implements Printable{
+public class Printer implements Printable{
 	
 	public void showPopupMessage(String text){
 		JOptionPane.showMessageDialog(null, text);
@@ -53,7 +53,7 @@ public class Printer2 implements Printable{
 	}
 	
 	public void printScreen(Maze current_maze){
-		if(current_maze == null){
+		if(current_maze == null || current_maze.grid.grid == null){
 			showPopupMessage("You must create a maze first!");
 			return;
 		}
@@ -61,7 +61,7 @@ public class Printer2 implements Printable{
 		drawMazeToGraphics(current_maze.grid.grid, maze);
 		
 		PrinterJob print_job = PrinterJob.getPrinterJob();
-		print_job.setPrintable(new Printer(maze));
+		print_job.setPrintable(this);
 		try {
 			print_job.print();
 		} catch (PrinterException e) {
