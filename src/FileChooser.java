@@ -15,6 +15,10 @@ public class FileChooser {
 		file_save = new JFileChooser();
 	}
 	
+	public void showPopupMessage(String text){
+		JOptionPane.showMessageDialog(null, text);
+	}
+	
 	public void drawMazeToGraphics(char[][] grid, Graphics givenGraphics){
 		if(grid == null) return;
 
@@ -85,9 +89,5 @@ public class FileChooser {
 			String result = downloadImage(current_maze.grid.grid, file_save.getSelectedFile());
 			showPopupMessage(result);
 		}
-	}
-	
-	public void showPopupMessage(String text){
-		JOptionPane.showMessageDialog(null, text);
 	}
 }

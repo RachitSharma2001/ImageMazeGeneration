@@ -15,6 +15,7 @@ import javax.swing.JPanel;
 public class UserDisplay extends JPanel{
 	private Button create_maze;
 	private Button save_maze;
+	private Button print_maze;
 	private UserSelect user_select;
 	private Maze current_maze;
 	
@@ -77,9 +78,24 @@ public class UserDisplay extends JPanel{
 		add(save_maze);
 	}
 	
+	private void printMazeComponent(){
+		print_maze = new Button("Print");
+		
+		Printer2 printer = new Printer2();
+		print_maze.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				printer.printScreen(current_maze);
+			}
+		});
+		
+		add(print_maze);
+	}
+	
 	private void createComponents(){
 		createMazeComponent();
 		saveMazeComponent();
+		printMazeComponent();
 	}
 	
 	public UserDisplay() {
