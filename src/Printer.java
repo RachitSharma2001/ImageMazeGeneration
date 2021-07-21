@@ -37,28 +37,13 @@ public class Printer implements Printable{
 		return mazeGraphics;
 	}
 	
-	public void drawMazeToGraphics(char[][] grid, Graphics givenGraphics){
-		if(grid == null) return;
-
-		int wall_size = 7;
-		int x_start_pos = 45;
-		int y_start_pos = 400 - wall_size*grid[0].length/2;
-		for(int i = 0, x = x_start_pos; i < grid.length; i++, x+=wall_size){
-			for(int j = 0, y = y_start_pos; j < grid[0].length; j++,y+=wall_size){
-				if(grid[i][j] == '#'){
-					givenGraphics.fillRect(y, x, wall_size, wall_size);
-				}
-			}
-		}
-	}
-	
 	public void printScreen(Maze current_maze){
-		if(current_maze == null || current_maze.grid.grid == null){
+		if(current_maze == null /*|| current_maze.grid.grid == null*/){
 			showPopupMessage("You must create a maze first!");
 			return;
 		}
 		Graphics maze = giveGraphics(new BufferedImage(800, 500, BufferedImage.TYPE_INT_RGB));
-		drawMazeToGraphics(current_maze.grid.grid, maze);
+		My_Graphics.drawMazeToGraphics(current_maze.grid.grid, maze);
 		
 		PrinterJob print_job = PrinterJob.getPrinterJob();
 		print_job.setPrintable(this);

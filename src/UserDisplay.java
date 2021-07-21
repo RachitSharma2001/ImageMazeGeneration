@@ -23,25 +23,17 @@ public class UserDisplay extends JPanel{
 	private UserSelect user_select;
 	private Maze current_maze;
 	
+	/* method to update graphics on screen; called whenever
+	   repaint() is called */
 	public void paint(Graphics g){
+		// Set parent paint component
 		super.paintComponent(g);
 		
-		if(current_maze == null || current_maze.grid.grid == null) return;
+		// Avoid null pointer exception
+		if(current_maze == null) return;
 		
-		char[][] grid = current_maze.grid.grid;
-		g.setColor(Color.BLACK);
-		
-		int wall_size = 7;
-		int x_start_pos = 45;
-		int y_start_pos = 400 - wall_size*grid[0].length/2;
-		for(int i = 0, x = x_start_pos; i < grid.length; i++, x+=wall_size){
-			for(int j = 0, y = y_start_pos; j < grid[0].length; j++,y+=wall_size){
-				if(grid[i][j] == '#'){
-					g.fillRect(y, x, wall_size, wall_size);
-				}
-			}
-		}
-		
+		// Draw the current maze to g(which displays maze on screen)
+		My_Graphics.drawMazeToGraphics(current_maze.grid.grid, g);
 	}
 	
 	private void adjustSliders(int new_height, int new_width){
