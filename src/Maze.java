@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.PriorityQueue;
 
 
 public class Maze {
@@ -26,13 +27,12 @@ public class Maze {
 	}
 }
 
-// Eventually I want to remove the array list and have just the priority queues
 class Walls{
-	private ArrayList<WallObj> walls_list;
+	private PriorityQueue<WallObj> walls_list;
 	
 	Walls(int R, int C){
 		int id_count = 0;
-		walls_list = new ArrayList<WallObj>();
+		walls_list = new PriorityQueue<WallObj>();
 		for(int row = 0; row < R; row++){
 			for(int col = 0; col < C; col++){
 				if(col != 0) walls_list.add(new WallObj(id_count-1, id_count));
@@ -42,11 +42,9 @@ class Walls{
 		}
 	}
 	
+	// give and remove the top of the binary heap (its sorted in random order)
 	WallObj giveRandomWall(){
-		int rand_ind = Random.giveRandInt(0, walls_list.size() - 1);
-		WallObj deleted_wall = walls_list.get(rand_ind);
-		walls_list.remove(rand_ind);
-		return deleted_wall;
+		return walls_list.poll();
 	}
 	
 	boolean noneLeft(){
@@ -54,12 +52,13 @@ class Walls{
 	}
 }
 
-class WallObj{
-	int first_id, second_id;
+class WallObj implements Comparable<WallObj>{
+	int first_id, second_id, index;
 	
 	WallObj(int f_id, int s_id){
 		first_id = f_id;
 		second_id = s_id;
+		index = (int) (Math.random() * Integer.MAX_VALUE);
 	}
 	
 	int getFirstId(){
@@ -68,6 +67,18 @@ class WallObj{
 	
 	int getSecondId(){
 		return second_id;
+	}
+	
+	// return value assigned to current object
+	int getIndex(){
+		return index;
+	}
+	
+	// Sorting function based on randomly generated value of this object
+	@Override 
+	public int compareTo(WallObj given){
+		if(index < given.getIndex()) return -1;
+		return 1;
 	}
 }
 
